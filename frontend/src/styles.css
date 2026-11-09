@@ -1,0 +1,250 @@
+/*
+ * Sistema visual (informe UX/UI): la app es CLARA. Fondo blanco, tarjetas en gris plata, una tarjeta
+ * azul noche como encabezado de cada pantalla, tiles de color y botón principal amarillo.
+ * Paleta base: Azul noche #0B1F3A · Gris plata #D7DEE8 · Blanco · Amarillo #F4C542 · Éxito #22C55E · Alerta #EF4444.
+ * Los estados NUNCA dependen solo del color: siempre llevan ícono + texto.
+ */
+:root {
+  --navy: #0b1f3a;
+  --silver: #d7dee8;
+  --silver-soft: #e6ebf3;
+  --yellow: #f4c542;
+  --yellow-soft: #fcf1cc;
+  --mint-soft: #dff5e8;
+
+  --bg: #f6f8fb;
+  --surface: #ffffff;
+  --border: #d7dee8;
+  --text: #0b1f3a;
+  --muted: #4b5d75;
+  --focus: #1d4ed8;
+
+  --ok-bg: #d3f2df;
+  --ok-fg: #14532d;
+  --warn-bg: #f4c542;
+  --warn-fg: #0b1f3a;
+  --bad-bg: #fde2e2;
+  --bad-fg: #8f1d1d;
+  --info-bg: #cbd5e3;
+  --info-fg: #0b1f3a;
+  --ok-solid: #22c55e;
+
+  --radius: 14px;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+h1, h2, h3 {
+  line-height: 1.2;
+  margin: 0 0 0.35rem;
+}
+h1 { font-size: 1.4rem; }
+h2 { font-size: 1.1rem; }
+h3 { font-size: 1rem; }
+p { margin: 0 0 0.6rem; }
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+.center { text-align: center; }
+.stack > * + * { margin-top: 0.9rem; }
+.row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+.row.between { justify-content: space-between; }
+.grow { flex: 1 1 auto; }
+
+/* Etiqueta chica en mayúsculas, como "MI CLASE" o "GESTIÓN ACADÉMICA" del informe. */
+.cap {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+/* Encabezado azul noche de cada pantalla. */
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--navy);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 0.9rem 1.1rem;
+}
+.hero .cap { color: var(--silver); }
+.hero h1, .hero h2 { color: #fff; margin: 0.1rem 0 0; }
+.hero p { color: var(--silver); margin: 0.2rem 0 0; font-size: 0.9rem; }
+
+/* Círculo amarillo con un número (ej. cantidad de comisiones, presentes). */
+.count {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  background: var(--yellow);
+  color: var(--navy);
+  font-weight: 800;
+}
+
+/* Tarjeta gris plata (la superficie por defecto de los bloques de contenido). */
+.card {
+  background: var(--silver-soft);
+  border-radius: var(--radius);
+  padding: 0.9rem 1.1rem;
+}
+.card.white { background: var(--surface); border: 1px solid var(--border); }
+/* Fila oscura de acción, como "Registro de asistencia" en el informe. */
+.card.dark { background: var(--navy); color: #fff; }
+.card.dark .muted { color: var(--silver); }
+
+/* Tiles de métricas (Asistencia / Presentes / Ausentes). */
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.55rem; }
+.tile { border-radius: 12px; padding: 0.6rem 0.5rem; text-align: center; }
+.tile .cap { color: var(--muted); font-size: 0.62rem; }
+.tile .val { display: block; font-size: 1.5rem; font-weight: 800; line-height: 1.2; }
+.tile.silver { background: var(--silver); }
+.tile.yellow { background: var(--yellow-soft); }
+.tile.mint { background: var(--mint-soft); }
+
+/* Botones: alto mínimo 44px (Apple HIG / WCAG 2.2). El principal es amarillo con texto en mayúsculas. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.55rem 1.1rem;
+  border-radius: 10px;
+  border: 2px solid var(--yellow);
+  background: var(--yellow);
+  color: var(--navy);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.05s ease, filter 0.15s ease;
+}
+.btn:hover:not(:disabled) { filter: brightness(0.96); }
+.btn:active:not(:disabled) { transform: scale(0.98); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.secondary { background: transparent; color: var(--navy); border-color: var(--navy); }
+.btn.dark { background: var(--navy); color: #fff; border-color: var(--navy); }
+.btn.danger { background: var(--bad-bg); color: var(--bad-fg); border-color: var(--bad-fg); }
+.btn.block { display: flex; width: 100%; }
+.btn.big { min-height: 54px; font-size: 0.95rem; }
+
+/* Formularios: etiquetas chicas en mayúsculas, campos sobre fondo gris plata. */
+label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+input, select, textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: var(--silver-soft);
+  color: var(--text);
+  font: inherit;
+}
+.card.white input, .card.white select { background: var(--silver-soft); }
+input:focus, select:focus { border-color: var(--navy); outline: none; background: #fff; }
+.field + .field { margin-top: 1rem; }
+/* Casilla de verificación con su texto (no es una etiqueta de campo: va en minúsculas). */
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text);
+  cursor: pointer;
+}
+input[type='checkbox'] { width: 1.3rem; height: 1.3rem; min-height: 0; accent-color: var(--navy); }
+.grid2 { display: grid; gap: 0.9rem; grid-template-columns: 1fr; }
+@media (min-width: 560px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+
+/* Pastillas de estado: ícono + texto + color, en mayúsculas. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.badge.ok { background: var(--ok-bg); color: var(--ok-fg); }
+.badge.warn { background: var(--warn-bg); color: var(--warn-fg); }
+.badge.bad { background: var(--bad-bg); color: var(--bad-fg); }
+.badge.info { background: var(--info-bg); color: var(--info-fg); }
+
+.alert { border-radius: 10px; padding: 0.7rem 1rem; font-weight: 600; font-size: 0.92rem; }
+.alert.ok { background: var(--ok-bg); color: var(--ok-fg); }
+.alert.warn { background: var(--yellow-soft); color: #5b4300; }
+.alert.bad { background: var(--bad-bg); color: var(--bad-fg); }
+.alert.info { background: var(--info-bg); color: var(--info-fg); }
+
+.progress {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--silver);
+  overflow: hidden;
+}
+.progress > span { display: block; height: 100%; background: var(--ok-solid); border-radius: 999px; }
+.progress.low > span { background: #ef4444; }
+
+.list { list-style: none; margin: 0; padding: 0; }
+.list > li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--silver);
+}
+.list > li:first-child { border-top: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
