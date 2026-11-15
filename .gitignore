@@ -3,3 +3,8 @@ dist/
 .env
 .angular/
 *.log
+
+# CDK
+infra/cdk.out/
+infra/cdk-outputs.json
+infra/cdk.context.json

@@ -3,11 +3,18 @@ import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
-/** Agrega el JWT a cada llamada a la API y, si el servidor responde 401, cierra la sesión local. */
+/** URL de API Gateway que inyecta public/config.js al desplegar ('' en desarrollo: se usa el proxy de ng serve). */
+const API_URL = ((window as { __API_URL__?: string }).__API_URL__ ?? '').replace(/\/$/, '');
+
+/**
+ * Agrega la URL base y el JWT a cada llamada a la API y, si el servidor responde 401, cierra la sesión local.
+ * Los servicios siguen pidiendo rutas relativas ('/api/...'): acá se decide a qué servidor van.
+ */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   const token = auth.token();
-  const authed = token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
+  const url = API_URL && req.url.startsWith('/api/') ? API_URL + req.url : req.url;
+  const authed = req.clone({ url, setHeaders: token ? { Authorization: `Bearer ${token}` } : {} });
 
   return next(authed).pipe(
     catchError((err: unknown) => {
