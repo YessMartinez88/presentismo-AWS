@@ -60,14 +60,29 @@ const MAX_WIDTH = 960;
               <button type="button" class="btn block big" (click)="iniciarCamara()">▦ {{ error() ? 'Escanear de nuevo' : 'Activar cámara y escanear' }}</button>
             </section>
 
-            <section class="card stack">
+           <section class="card stack">
               <h2>¿No podés escanear?</h2>
               <p class="muted small">Pegá el enlace o el código que muestra el docente.</p>
               <div class="field">
                 <label for="codigo">Enlace o código</label>
-                <input id="codigo" #codigo type="text" autocomplete="off" autocapitalize="off" spellcheck="false" />
-              </div>
-              <button type="button" class="btn secondary block" (click)="registrar(extraerToken(codigo.value))" [disabled]="!codigo.value.trim()">
+                <input
+                  id="codigo"
+                  type="text"
+                  placeholder="Pegá acá el enlace o código..."
+                  [value]="codigoTexto()"
+                  (input)="codigoTexto.set($any($event.target).value)"
+                  (keyup.enter)="codigoTexto().trim() && registrar(extraerToken(codigoTexto()))"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                />
+   </div>
+              <button
+                type="button"
+                class="btn secondary block"
+                (click)="registrar(extraerToken(codigoTexto()))"
+                [disabled]="!codigoTexto().trim()"
+              >
                 Registrar con este código
               </button>
             </section>
@@ -92,6 +107,7 @@ export class Escanear {
   protected readonly fase = signal<Fase>('inicial');
   protected readonly resultado = signal<RegistroAsistencia | null>(null);
   protected readonly error = signal<{ mensaje: string; codigo: string | null } | null>(null);
+  protected readonly codigoTexto = signal('');
 
   private stream: MediaStream | null = null;
   private raf = 0;
@@ -178,6 +194,7 @@ export class Escanear {
     this.fase.set('enviando');
     try {
       this.resultado.set(await firstValueFrom(this.api.registrarQr(token)));
+      this.codigoTexto.set('');
       this.fase.set('listo');
     } catch (err) {
       this.fallar(mensajeDeError(err), codigoDeError(err));

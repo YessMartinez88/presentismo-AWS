@@ -10,10 +10,6 @@ import { Sesion } from '../../core/models';
 const POLL_MS = 3000;
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-/**
- * Detalle de una sesión de asistencia. El docente dueño ve además el QR (que se renueva solo);
- * administración ve la lista de presentes y puede cerrarla, pero no genera códigos.
- */
 @Component({
   selector: 'app-sesion',
   imports: [DatePipe, RouterLink],
@@ -45,11 +41,22 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
               } @else if (qrImg(); as img) {
                 <img [src]="img" width="320" height="320" alt="Código QR de la sesión de asistencia" />
                 <p class="muted small center">
-                  El código se renueva cada pocos segundos. Los alumnos lo escanean con la cámara de la app
-                  o con la cámara del celular.
+                  El código se renueva cada pocos segundos. Los alumnos lo escanean con la cámara
+                  o ingresan el código/enlace manual.
                 </p>
-                <div class="row center">
-                  <button type="button" class="btn secondary" (click)="copiar()">{{ copiado() ? '✓ Copiado' : 'Copiar enlace' }}</button>
+
+                <div class="codigo-box">
+                  <span class="muted small">Código temporal de prueba:</span>
+                  <code class="token-preview">{{ tokenActual() }}</code>
+                </div>
+
+                <div class="row center gap">
+                  <button type="button" class="btn secondary" (click)="copiar(qrUrl, 'enlace')">
+                    {{ copiado() === 'enlace' ? '✓ Enlace copiado' : 'Copiar enlace' }}
+                  </button>
+                  <button type="button" class="btn secondary" (click)="copiar(tokenActual(), 'codigo')">
+                    {{ copiado() === 'codigo' ? '✓ Código copiado' : 'Copiar código' }}
+                  </button>
                 </div>
               } @else {
                 <p class="muted center">Generando código…</p>
@@ -92,7 +99,10 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
     .layout { display: grid; gap: 1rem; grid-template-columns: 1fr; }
     @media (min-width: 800px) { .layout { grid-template-columns: 380px 1fr; align-items: start; } }
     .qr img { width: 100%; max-width: 320px; height: auto; margin: 0 auto; display: block; background: #fff; border-radius: 12px; }
-    .row.center { justify-content: center; }
+    .row.center { justify-content: center; flex-wrap: wrap; }
+    .gap { gap: 0.5rem; }
+    .codigo-box { background: #f4f6f8; padding: 0.6rem; border-radius: 8px; text-align: center; border: 1px dashed #cbd5e1; }
+    .token-preview { display: block; font-family: monospace; font-size: 0.8rem; word-break: break-all; margin-top: 0.25rem; color: #1e293b; max-height: 3.6em; overflow: hidden; text-overflow: ellipsis; }
   `,
 })
 export class SesionPage {
@@ -102,10 +112,11 @@ export class SesionPage {
 
   protected readonly sesion = signal<Sesion | null>(null);
   protected readonly qrImg = signal<string | null>(null);
+  protected readonly tokenActual = signal<string>('');
   protected readonly error = signal<string | null>(null);
-  protected readonly copiado = signal(false);
+  protected readonly copiado = signal<'enlace' | 'codigo' | null>(null);
   private readonly ahora = signal(Date.now());
-  private qrUrl = '';
+  protected qrUrl = '';
   private destruido = false;
 
   protected readonly porcentaje = computed(() => {
@@ -130,14 +141,13 @@ export class SesionPage {
     if (!this.esAdmin) void this.renovarQr();
   }
 
-  /** Lista de presentes "en vivo": se consulta cada 3 s (más simple que WebSockets para un MVP). */
   private async consultarSesion(): Promise<void> {
     while (!this.destruido) {
       try {
         const actual = await firstValueFrom(this.api.obtener(this.id));
         this.sesion.set(actual);
         this.error.set(null);
-        if (!actual.abierta) return; // cerrada o vencida: el estado ya es definitivo
+        if (!actual.abierta) return;
       } catch (err) {
         this.error.set(mensajeDeError(err));
         const codigo = codigoDeError(err);
@@ -147,20 +157,18 @@ export class SesionPage {
     }
   }
 
-  /** Pide un token nuevo antes de que venza el anterior y redibuja el QR. */
   private async renovarQr(): Promise<void> {
     while (!this.destruido) {
       let espera = POLL_MS;
       try {
         const qr = await firstValueFrom(this.api.qr(this.id));
-        // El QR contiene un enlace: con la cámara nativa del celular abre la app y registra directo.
+        this.tokenActual.set(qr.token);
         this.qrUrl = `${location.origin}/alumno/escanear?t=${encodeURIComponent(qr.token)}`;
         this.qrImg.set(await toDataURL(this.qrUrl, { width: 640, margin: 2, errorCorrectionLevel: 'M' }));
         espera = qr.refrescarEnSeg * 1000;
       } catch (err) {
         const codigo = codigoDeError(err);
         if (codigo === 'SESION_CERRADA') {
-          // Se cerró (o venció): refrescamos el estado una última vez y dejamos de pedir QR.
           this.qrImg.set(null);
           try {
             this.sesion.set(await firstValueFrom(this.api.obtener(this.id)));
@@ -175,13 +183,13 @@ export class SesionPage {
     }
   }
 
-  protected async copiar(): Promise<void> {
+  protected async copiar(texto: string, tipo: 'enlace' | 'codigo'): Promise<void> {
     try {
-      await navigator.clipboard.writeText(this.qrUrl);
-      this.copiado.set(true);
-      setTimeout(() => this.copiado.set(false), 2000);
+      await navigator.clipboard.writeText(texto);
+      this.copiado.set(tipo);
+      setTimeout(() => this.copiado.set(null), 2000);
     } catch {
-      this.error.set('No se pudo copiar. Seleccioná y copiá el enlace manualmente.');
+      this.error.set('No se pudo copiar. Seleccioná y copiá manualmente.');
     }
   }
 
